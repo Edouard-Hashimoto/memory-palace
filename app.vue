@@ -1,0 +1,13 @@
+<template>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
+</template>
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0f172a; /* slate-900 */
+}
+</style>
