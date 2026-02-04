@@ -1,10 +1,15 @@
 import { db } from '~/server/utils/db';
 import { souvenirs } from '~/server/database/schema';
 import { readMultipartFormData } from 'h3';
-import fs from 'node:fs';
-import path from 'node:path';
-
+import { v2 as cloudinary } from 'cloudinary';
 import { getSession } from '~/server/utils/auth';
+
+// Configure Cloudinary
+cloudinary.config({ 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET 
+});
 
 export default defineEventHandler(async (event) => {
     // Check authentication
@@ -35,18 +40,30 @@ export default defineEventHandler(async (event) => {
     const file = body.find(x => x.name === 'file');
 
     if (file && file.filename) {
-        // Ensure upload directory exists
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
+        // Upload to Cloudinary using promise
+        try {
+            const uploadResult = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    { 
+                        folder: 'memory-place',
+                        resource_type: 'auto' // Detects image vs audio/video
+                    },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                // Write buffer to stream
+                uploadStream.end(file.data);
+            });
+            
+            // @ts-ignore
+            urlMedia = uploadResult.secure_url;
+            
+        } catch (error) {
+            console.error('Cloudinary upload error:', error);
+            throw createError({ statusCode: 500, statusMessage: 'File Upload Error' });
         }
-
-        const ext = path.extname(file.filename);
-        const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}${ext}`;
-        const uploadPath = path.join(uploadDir, fileName);
-
-        fs.writeFileSync(uploadPath, file.data);
-        urlMedia = `/uploads/${fileName}`;
     }
 
     await db.insert(souvenirs).values({
