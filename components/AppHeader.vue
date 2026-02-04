@@ -7,8 +7,8 @@
           Memory Place
         </NuxtLink>
 
-        <!-- Navigation -->
-        <nav class="flex items-center gap-4">
+        <!-- Navigation Desktop -->
+        <nav class="hidden md:flex items-center gap-4">
           <NuxtLink to="/map" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors" active-class="text-purple-600">
             Carte
           </NuxtLink>
@@ -35,6 +35,41 @@
             </NuxtLink>
           </template>
         </nav>
+
+        <!-- Button Mobile -->
+        <button @click="isOpen = !isOpen" class="md:hidden p-2 text-slate-600 hover:text-purple-600 transition-colors">
+          <span v-if="!isOpen">☰</span>
+          <span v-else>✕</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menu Mobile -->
+    <div v-show="isOpen" class="md:hidden bg-white/95 backdrop-blur-md border-b border-slate-200">
+      <div class="px-4 pt-2 pb-6 space-y-2 flex flex-col items-center text-center">
+        <NuxtLink to="/map" class="w-full py-3 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors border-b border-slate-100" active-class="text-purple-600 bg-purple-50">
+          Carte
+        </NuxtLink>
+        <NuxtLink to="/list" class="w-full py-3 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors border-b border-slate-100" active-class="text-purple-600 bg-purple-50">
+          Souvenirs
+        </NuxtLink>
+        <NuxtLink to="/about" class="w-full py-3 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors border-b border-slate-100" active-class="text-purple-600 bg-purple-50">
+          À propos
+        </NuxtLink>
+
+        <template v-if="user">
+          <NuxtLink to="/profile" class="w-full py-3 text-sm text-purple-600 font-medium border-b border-slate-100">
+            Profil ({{ user.username }})
+          </NuxtLink>
+          <button @click="logout" class="w-full py-3 text-sm font-medium text-red-500 hover:text-red-600 transition-colors">
+            Déconnexion
+          </button>
+        </template>
+        <template v-else>
+           <NuxtLink to="/login" class="w-full py-3 mt-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+            Connexion
+          </NuxtLink>
+        </template>
       </div>
     </div>
   </header>
@@ -42,4 +77,10 @@
 
 <script setup>
 const { user, logout } = useAuth();
+const isOpen = ref(false);
+
+const route = useRoute();
+watch(() => route.fullPath, () => {
+  isOpen.value = false;
+});
 </script>
