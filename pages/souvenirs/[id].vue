@@ -35,14 +35,25 @@
               </span>
             </div>
             
-            <button 
-              v-if="user && mem.userId === user.id"
-              @click="deleteMemory"
-              class="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <span>Supprimer</span>
-              🗑️
-            </button>
+            <div class="flex gap-2">
+              <button 
+                @click="copyLink"
+                class="text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors flex items-center gap-2"
+                :title="shareText"
+              >
+                <span>{{ shareText }}</span>
+                🔗
+              </button>
+
+              <button 
+                v-if="user && mem.userId === user.id"
+                @click="deleteMemory"
+                class="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <span>Supprimer</span>
+                🗑️
+              </button>
+            </div>
           </div>
 
           <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed mb-8 whitespace-pre-wrap">
@@ -86,6 +97,18 @@ const deleteMemory = async () => {
   } catch (e) {
     alert('Erreur lors de la suppression');
   }
+};
+
+const shareText = ref('Partager');
+
+const copyLink = () => {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    shareText.value = 'Lien copié !';
+    setTimeout(() => {
+      shareText.value = 'Partager';
+    }, 2000);
+  });
 };
 
 useHead({

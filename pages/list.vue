@@ -5,21 +5,53 @@
       <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-500 bg-clip-text text-transparent">
         Souvenirs
       </h1>
-      <NuxtLink to="/" class="text-sm bg-white hover:bg-slate-50 px-3 py-2 rounded-lg transition-colors border border-slate-200 text-slate-600 font-medium">
+      <NuxtLink to="/map" class="text-sm bg-white hover:bg-slate-50 px-3 py-2 rounded-lg transition-colors border border-slate-200 text-slate-600 font-medium">
         Carte
       </NuxtLink>
     </div>
     
+    <!-- Filters -->
+    <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <button 
+        @click="filterType = 'all'"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap"
+        :class="filterType === 'all' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'"
+      >
+        Tout
+      </button>
+      <button 
+        @click="filterType = 'photo'"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
+        :class="filterType === 'photo' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'"
+      >
+        <span>📷</span> Photo
+      </button>
+      <button 
+        @click="filterType = 'audio'"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
+        :class="filterType === 'audio' ? 'bg-pink-100 text-pink-700 border-pink-200' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'"
+      >
+        <span>🎵</span> Audio
+      </button>
+      <button 
+        @click="filterType = 'text'"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
+        :class="filterType === 'text' ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'"
+      >
+        <span>📝</span> Texte
+      </button>
+    </div>
+
     <!-- Grid -->
     <div v-if="pending" class="text-center text-slate-500 mt-10">Chargement...</div>
     
-    <div v-else-if="!memories || memories.length === 0" class="text-center text-slate-500 mt-10">
-      Aucun souvenir trouvé. Soyez le premier à en déposer un !
+    <div v-else-if="!filteredMemories || filteredMemories.length === 0" class="text-center text-slate-500 mt-10">
+      Aucun souvenir trouvé.
     </div>
     
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div 
-        v-for="mem in memories" 
+        v-for="mem in filteredMemories" 
         :key="mem.id" 
         class="bg-white rounded-xl p-4 border border-slate-200 hover:border-purple-300 transition-colors shadow-sm hover:shadow-md relative group cursor-pointer"
         @click="navigateTo(`/souvenirs/${mem.id}`)"
@@ -64,6 +96,14 @@
 <script setup>
 const { user } = useAuth();
 const { data: memories, pending, refresh } = await useFetch('/api/souvenirs');
+
+const filterType = ref('all');
+
+const filteredMemories = computed(() => {
+  if (!memories.value) return [];
+  if (filterType.value === 'all') return memories.value;
+  return memories.value.filter(m => m.typeMedia === filterType.value);
+});
 
 const deleteMemory = async (id) => {
   if (!confirm('Voulez-vous vraiment supprimer ce souvenir ?')) return;

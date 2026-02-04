@@ -1,6 +1,38 @@
 <template>
   <div ref="mapContainer" class="h-full w-full z-0"></div>
   
+  <!-- Map Filters -->
+  <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-slate-200 p-1 flex gap-1">
+    <button 
+      @click="filterType = 'all'"
+      class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+      :class="filterType === 'all' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'"
+    >
+      Tout
+    </button>
+    <button 
+      @click="filterType = 'photo'"
+      class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1"
+      :class="filterType === 'photo' ? 'bg-purple-100 text-purple-700' : 'text-slate-600 hover:bg-slate-100'"
+    >
+      <span>📷</span> Photo
+    </button>
+    <button 
+      @click="filterType = 'audio'"
+      class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1"
+      :class="filterType === 'audio' ? 'bg-pink-100 text-pink-700' : 'text-slate-600 hover:bg-slate-100'"
+    >
+      <span>🎵</span> Audio
+    </button>
+    <button 
+      @click="filterType = 'text'"
+      class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1"
+      :class="filterType === 'text' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'"
+    >
+      <span>📝</span> Texte
+    </button>
+  </div>
+
   <Teleport to="body">
     <div v-if="selectedMemory" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="selectedMemory = null">
       <div class="bg-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-700">
@@ -77,12 +109,17 @@ const deleteMemory = async (id) => {
 };
 
 const markersLayer = L.layerGroup();
+const filterType = ref('all');
 
 const updateMarkers = () => {
   if (!mapInstance.value) return;
   markersLayer.clearLayers();
   
-  memories.value.forEach(mem => {
+  const filtered = filterType.value === 'all' 
+    ? memories.value 
+    : memories.value.filter(m => m.typeMedia === filterType.value);
+
+  filtered.forEach(mem => {
     L.marker([mem.latitude, mem.longitude], { icon: glowIcon })
       .bindTooltip(mem.title)
       .on('click', () => {
@@ -93,6 +130,10 @@ const updateMarkers = () => {
   
   markersLayer.addTo(mapInstance.value);
 };
+
+watch(filterType, () => {
+  updateMarkers();
+});
 
 onMounted(async () => {
   await nextTick();
